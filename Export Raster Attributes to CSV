@@ -1,0 +1,35 @@
+##  批量添加字段，进行字段计算，导出属性表。
+
+import arcpy  #导入库
+arcpy.env.workspace = r"D:\11111111\abaga"  #设定工作环境
+print(arcpy.env.workspace)
+all_tifs = arcpy.ListFiles("*.tif") #列出所有tif文件，*表任意。
+print(all_tifs)
+for i in all_tifs:  #遍历所有
+    arcpy.AddField_management(i, "area", "LONG", "", "", "10", "", "NULLABLE", "NON_REQUIRED")  #添加字段
+    arcpy.CalculateField_management(i, "area", "[Value]*[Count]", "VB")  #计算zongET字段
+    
+##  导出所有属性表至同一csv文件。
+import arcpy, os 
+ws = r'D:\11111111\abaga\Huangtu_dong.gdb'      
+outCSV = r'D:\11111111\daochu\Huangtu_dong.csv' 
+arcpy.env.workspace = ws  
+rasters = arcpy.ListRasters("*")
+for raster in rasters:
+    rasloc = ws + os.sep + raster
+    fields = "*"
+    try:
+        lstFlds = arcpy.ListFields(rasloc)
+        header = '' 
+        header += ",{0}".format(lstFlds[0].name)+",{0}".format(lstFlds[1].name)
+        if len(lstFlds) != 0:                    
+            f = open(outCSV,'a')
+            header =header[0:] + ',RasterName\n'
+            f.write(header)
+            with arcpy.da.SearchCursor(rasloc, fields) as cursor:
+                for row in cursor:
+                    f.write(str(row).replace("(","").replace(")","") + "," + raster + '\n')
+            f.close()
+    except Exception as e:
+        print (e)
+del row
